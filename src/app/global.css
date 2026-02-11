@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   SkiWeather — Global Styles
+   ============================================================ */
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 antialiased;
+  }
+
+  /* Scrollbar discrète */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-900;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-slate-700;
+  }
+}
+
+@layer components {
+  /* Carte glassmorphism */
+  .card-glass {
+    @apply rounded-2xl border border-slate-800 bg-slate-900/70 backdrop-blur-sm;
+  }
+
+  /* Gradient texte glacier */
+  .gradient-text {
+    @apply bg-gradient-to-r from-glacier-400 to-cyan-300 bg-clip-text text-transparent;
+  }
+
+  /* Badge tag */
+  .tag-badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  /* Score circle */
+  .score-ring {
+    @apply relative flex h-14 w-14 items-center justify-center rounded-full;
+    background: conic-gradient(
+      var(--score-color) calc(var(--score-pct) * 1%),
+      theme(colors.slate.800) 0%
+    );
+  }
+
+  .score-ring::after {
+    content: "";
+    @apply absolute inset-[3px] rounded-full bg-slate-900;
+  }
+
+  .score-ring-value {
+    @apply relative z-10 text-sm font-bold;
+  }
+
+  /* Barre de score horizontale */
+  .score-bar {
+    @apply h-1.5 rounded-full bg-slate-800;
+  }
+  .score-bar-fill {
+    @apply h-full rounded-full transition-all duration-700;
+  }
+}
+
+@layer utilities {
+  .text-shadow-sm {
+    text-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+  }
+}
