@@ -50,6 +50,8 @@ export interface Station {
   altitudeMax: number;
   kmPistes: number;
   openMeteoElevation: number;
+    snowForecastSlug: string | null;
+    skiinfoSlug: string | null;
 }
 
 export interface DailyForecast {
@@ -124,4 +126,27 @@ export interface FilterOptions {
   region: string | null;
   minAltitude: number | null;
   minScore: number | null;
+}
+
+export interface SnowForecastData {
+    snowDepthHighCm: number;
+    snowDepthLowCm: number;
+    freshSnow3dCm: number;
+    freshSnow7dCm: number;
+    scrapedAt: string; // ISO date
+}
+
+export interface SkiinfoData {
+    openLifts: number;
+    totalLifts: number;
+    openSlopes: number;  // km
+    totalSlopes: number; // km
+    isOpen: boolean;
+    scrapedAt: string;
+}
+
+export interface ScrapedStationData {
+    stationId: string;
+    snowForecast: SnowForecastData | null;
+    skiinfo: SkiinfoData | null;
 }

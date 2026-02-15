@@ -1,72 +1,103 @@
-import { STATIONS } from "./stations";
-import { fetchAllStationsWeather } from "./weather";
+import { stations } from "./stations";
+import { fetchStationWeather } from "./weather";
 import { scoreStation } from "./scoring";
-import { cacheGet, cacheSet } from "./cache";
-import type { ScoredStation, StationWeather } from "./types";
+import type { ScoredStation, SnowForecastData, SkiinfoData } from "./types";
+import { getAllSnowForecastData, getSnowForecastData } from "./scraping/snow-forecast";
+import { getAllSkiinfoData, getSkiinfoData } from "./scraping/skiinfo";
 
 // ============================================================
-// Service de données principal
-// Orchestre : fetch → scoring → tri → cache
+// Cache mémoire simple
 // ============================================================
-
-const CACHE_KEY = "scored-stations";
 const CACHE_TTL = 3 * 60 * 60 * 1000; // 3h
+let cachedStations: ScoredStation[] | null = null;
+let cacheTimestamp = 0;
 
+// ============================================================
+// Toutes les stations scorées (home page)
+// ============================================================
 export async function getScoredStations(): Promise<ScoredStation[]> {
-    // Vérifier le cache
-    const cached = cacheGet<ScoredStation[]>(CACHE_KEY);
-    if (cached) {
-        console.log(`[SkiWeather] Cache hit — ${cached.length} stations`);
-        return cached;
+    // Vérifier cache
+    if (cachedStations && Date.now() - cacheTimestamp < CACHE_TTL) {
+        console.log(`[SkiWeather] Cache hit — ${cachedStations.length} stations`);
+        return cachedStations;
     }
 
-    console.log(
-        `[SkiWeather] Cache miss — fetching ${STATIONS.length} stations...`
-    );
+    console.log(`[SkiWeather] Fetching ${stations.length} stations...`);
     const startTime = Date.now();
 
-    // Fetch toutes les stations depuis Open-Meteo
-    const weatherMap: Map<string, StationWeather> =
-        await fetchAllStationsWeather(STATIONS);
+    // Scraping en parallèle — silencieux si ça échoue
+    const [snowForecastMap, skiinfoMap] = await Promise.all([
+        getAllSnowForecastData().catch((err) => {
+            console.warn("[SkiWeather] Snow-Forecast scraping failed:", err.message);
+            return new Map<string, SnowForecastData>();
+        }),
+        getAllSkiinfoData().catch((err) => {
+            console.warn("[SkiWeather] Skiinfo scraping failed:", err.message);
+            return new Map<string, SkiinfoData>();
+        }),
+    ]);
 
-    console.log(
-        `[SkiWeather] Fetched ${weatherMap.size}/${STATIONS.length} stations in ${Date.now() - startTime}ms`
-    );
+    // Fetch météo + scoring par station
+    const results: ScoredStation[] = [];
 
-    // Scorer chaque station
-    const scored: ScoredStation[] = [];
-
-    for (const station of STATIONS) {
-        const weather = weatherMap.get(station.id);
-        if (!weather) {
-            console.warn(`[SkiWeather] No weather data for ${station.name}, skipping`);
-            continue;
-        }
-
+    for (const station of stations) {
         try {
-            const result = scoreStation(station, weather);
-            scored.push(result);
-        } catch (e) {
-            console.error(`[SkiWeather] Scoring failed for ${station.name}:`, e);
+            const weather = await fetchStationWeather(station);
+            if (!weather) continue;
+
+            const snowForecast = snowForecastMap.get(station.id) ?? null;
+            const skiinfo = skiinfoMap.get(station.id) ?? null;
+
+            const scored = scoreStation(station, weather, snowForecast, skiinfo);
+            results.push(scored);
+        } catch (err) {
+            console.warn(`[SkiWeather] Skipping ${station.name}:`, err);
         }
     }
 
-    // Trier par score décroissant
-    scored.sort((a, b) => b.score.total - a.score.total);
+    // Tri par score décroissant
+    results.sort((a, b) => b.score.total - a.score.total);
 
-    // Mettre en cache
-    cacheSet(CACHE_KEY, scored, CACHE_TTL);
+    // Mise en cache
+    cachedStations = results;
+    cacheTimestamp = Date.now();
 
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(
-        `[SkiWeather] Scored & cached ${scored.length} stations. Top: ${scored[0]?.station.name} (${scored[0]?.score.total})`
+        `[SkiWeather] ${results.length} stations scored in ${elapsed}s. Top: ${results[0]?.station.name} (${results[0]?.score.total})`
     );
 
-    return scored;
+    return results;
 }
 
+// ============================================================
+// Une seule station par slug (page détail)
+// ============================================================
 export async function getScoredStationBySlug(
     slug: string
 ): Promise<ScoredStation | null> {
-    const all = await getScoredStations();
-    return all.find((s) => s.station.slug === slug) ?? null;
+    // D'abord chercher dans le cache
+    if (cachedStations && Date.now() - cacheTimestamp < CACHE_TTL) {
+        const found = cachedStations.find((s) => s.station.slug === slug);
+        if (found) return found;
+    }
+
+    // Sinon fetch individuel
+    const station = stations.find((s) => s.slug === slug);
+    if (!station) return null;
+
+    try {
+        const weather = await fetchStationWeather(station);
+        if (!weather) return null;
+
+        const [snowForecast, skiinfo] = await Promise.all([
+            getSnowForecastData(station.id).catch(() => null),
+            getSkiinfoData(station.id).catch(() => null),
+        ]);
+
+        return scoreStation(station, weather, snowForecast, skiinfo);
+    } catch (err) {
+        console.warn(`[SkiWeather] Error fetching ${station.name}:`, err);
+        return null;
+    }
 }

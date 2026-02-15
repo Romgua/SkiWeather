@@ -5,7 +5,7 @@ import type {
     ScoreBreakdown,
     DailyScore,
     StationTag,
-    ScoredStation
+    ScoredStation, SnowForecastData, SkiinfoData
 } from "./types";
 import {getWeatherDescription, isClearCode, isSnowCode} from "./weather-codes";
 
@@ -48,35 +48,24 @@ function scoreSnowfall(daily: DailyForecast[]): number {
 // Haut (60%) + Bas (40%)
 // >200cm = 100 | 150 = 80 | 100 = 60 | 50 = 35 | <30 = 10
 // ============================================================
-function scoreSnowpack(daily: DailyForecast[], station: Station): number {
-    // ──────────────────────────────────────────────────────
-    // snowDepthCm = 0 tant qu'on n'a pas le scraping (Phase 4)
-    // En attendant : estimation basée sur cumul 7j + altitude + saison
-    // TODO Phase 4 : remplacer par données réelles Snow-Forecast
-    // ──────────────────────────────────────────────────────
-
-    const totalSnow7d = daily.reduce((sum, d) => sum + d.snowfallCm, 0);
-
-    // Base saisonnière à 2000m (cm)
-    const month = new Date().getMonth();
-    const seasonBase: Record<number, number> = {
-        0: 120, 1: 150, 2: 130, 3: 80, 4: 30, 5: 0,
-        6: 0, 7: 0, 8: 0, 9: 0, 10: 20, 11: 60,
-    };
-    const base = (seasonBase[month] ?? 0) * Math.max(0.3, station.altitudeMax / 2000);
-
-    // Estimation haut
-    const altFactor = Math.min(1.5, Math.max(0.5, station.altitudeMax / 2000));
-    const estimatedHigh = base + totalSnow7d * altFactor;
-
-    // Estimation bas
-    const altRatio = Math.max(0.2, station.altitudeMin / station.altitudeMax);
-    const estimatedLow = estimatedHigh * altRatio;
-
-    const highScore = snowDepthToScore(estimatedHigh);
-    const lowScore = snowDepthToScore(estimatedLow);
-
-    return Math.round(highScore * 0.6 + lowScore * 0.4);
+function scoreSnowpack(d:DailyForecast[],st:Station,snowForecast?:SnowForecastData|null):number{
+    // Données réelles si disponibles
+    if(snowForecast&&(snowForecast.snowDepthHighCm>0||snowForecast.snowDepthLowCm>0)){
+        const high=snowDepthToScore(snowForecast.snowDepthHighCm);
+        const low=snowDepthToScore(snowForecast.snowDepthLowCm);
+        return Math.round(high*0.6+low*0.4)
+    }
+    // Fallback estimation
+    const total=d.reduce((s,x)=>s+x.snowfallCm,0);
+    const month=new Date().getMonth();
+    const baseMap:Record<number,number>={0:120,1:150,2:130,3:80,4:30,5:0,6:0,7:0,8:0,9:0,10:20,11:60};
+    const base=(baseMap[month]??0)*Math.max(0.3,st.altitudeMax/2000);
+    const altF=Math.min(1.5,Math.max(0.5,st.altitudeMax/2000));
+    const estH=base+total*altF;
+    const altR=Math.max(0.2,st.altitudeMin/st.altitudeMax);
+    const estL=estH*altR;
+    const high=snowDepthToScore(estH),low=snowDepthToScore(estL);
+    return Math.round(high*0.6+low*0.4)
 }
 
 function snowDepthToScore(depthCm: number): number {
@@ -176,35 +165,21 @@ function scoreWind(daily: DailyForecast[]): number {
 // Estimation basée sur les conditions météo
 // En Phase 4, sera remplacé par données réelles Skiinfo
 // ============================================================
-function scoreOpening(daily: DailyForecast[], station: Station): number {
-    // Heuristique : si neige > 50cm depth + pas de vent extrême → probablement ouvert
-    const avgDepth =
-        daily.reduce((sum, d) => sum + d.snowfallCm, 0) / daily.length;
-    const maxWind = Math.max(...daily.slice(0, 3).map((d) => d.windSpeedMaxKmh));
-    const hasRain = daily
-        .slice(0, 3)
-        .some((d) => {
-            const desc = getWeatherDescription(d.weatherCode);
-            return desc.category === "rain";
-        });
-
-    let score = 50; // Base
-
-    if (avgDepth >= 100) score += 30;
-    else if (avgDepth >= 50) score += 20;
-    else if (avgDepth >= 20) score += 5;
-    else score -= 20;
-
-    if (maxWind > 80) score -= 30;
-    else if (maxWind > 60) score -= 15;
-
-    if (hasRain) score -= 10;
-
-    // Bonus altitude : les hautes stations ont plus de chances d'être ouvertes
-    if (station.altitudeMax >= 3000) score += 10;
-    else if (station.altitudeMax >= 2500) score += 5;
-
-    return clamp(Math.round(score), 0, 100);
+function scoreOpening(d:DailyForecast[],st:Station,skiinfo?:SkiinfoData|null):number{
+    // Données réelles si disponibles
+    if(skiinfo&&skiinfo.totalLifts>0){
+        return Math.round((skiinfo.openLifts/skiinfo.totalLifts)*100)
+    }
+    // Fallback estimation
+    const avgDepth=d.reduce((s,x)=>s+x.snowfallCm,0)/d.length;
+    const maxWind=Math.max(...d.slice(0,3).map(x=>x.windSpeedMaxKmh));
+    const hasRain=d.slice(0,3).some(x=>getWeatherDescription(x.weatherCode).category==="rain");
+    let score=50;
+    if(avgDepth>=100)score+=30;else if(avgDepth>=50)score+=20;else if(avgDepth>=20)score+=5;else score-=20;
+    if(maxWind>80)score-=30;else if(maxWind>60)score-=15;
+    if(hasRain)score-=10;
+    if(st.altitudeMax>=3000)score+=10;else if(st.altitudeMax>=2500)score+=5;
+    return clamp(Math.round(score),0,100)
 }
 
 // ============================================================
@@ -385,45 +360,22 @@ function computeDailyScores(daily: DailyForecast[]): DailyScore[] {
 // FONCTION PRINCIPALE — Score une station complète
 // ============================================================
 export function scoreStation(
-    station: Station,
-    weather: StationWeather
-): ScoredStation {
-    const daily = weather.daily;
-
-    const snow = scoreSnowfall(daily);
-    const snowpack = scoreSnowpack(daily, station);
-    const weatherSc = scoreWeather(daily);
-    const wind = scoreWind(daily);
-    const opening = scoreOpening(daily, station);
-
-    // Total pondéré
-    const total = Math.round(
-        snow * 0.3 +
-        snowpack * 0.25 +
-        weatherSc * 0.25 +
-        wind * 0.1 +
-        opening * 0.1
-    );
-
-    const score: ScoreBreakdown = {
-        total: clamp(total, 0, 100),
-        snow,
-        snowpack,
-        weather: weatherSc,
-        wind,
-        opening,
-    };
-
-    const dailyScores = computeDailyScores(daily);
-    const tags = computeTags(daily, score);
-
-    return {
-        station,
-        weather,
-        score,
-        dailyScores,
-        tags,
-    };
+    station:Station,
+    weather:StationWeather,
+    snowForecast?:SnowForecastData|null,
+    skiinfo?:SkiinfoData|null
+):ScoredStation{
+    const daily=weather.daily;
+    const snow=scoreSnowfall(daily);
+    const snowpack=scoreSnowpack(daily,station,snowForecast);
+    const weatherSc=scoreWeather(daily);
+    const wind=scoreWind(daily);
+    const opening=scoreOpening(daily,station,skiinfo);
+    const total=Math.round(snow*0.3+snowpack*0.25+weatherSc*0.25+wind*0.1+opening*0.1);
+    const score:ScoreBreakdown={total:clamp(total,0,100),snow,snowpack,weather:weatherSc,wind,opening};
+    const dailyScores=computeDailyScores(daily);
+    const tags=computeTags(daily,score);
+    return{station,weather,score,dailyScores,tags}
 }
 
 // ============================================================

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { STATIONS } from "@/lib/stations";
+import { stations } from "@/lib/stations";
 import { getScoredStationBySlug, getScoredStations } from "@/lib/data-service";
 import { getWeatherDescription } from "@/lib/weather-codes";
 
@@ -9,7 +9,7 @@ export const revalidate = 10800;
 
 // Génère les routes statiques pour toutes les stations
 export async function generateStaticParams() {
-  return STATIONS.map((s) => ({ slug: s.slug }));
+  return stations.map((s) => ({ slug: s.slug }));
 }
 
 // Metadata dynamique SEO
@@ -19,7 +19,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const station = STATIONS.find((s) => s.slug === slug);
+  const station = stations.find((s) => s.slug === slug);
   if (!station) return { title: "Station introuvable" };
 
   return {
