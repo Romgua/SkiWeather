@@ -1,79 +1,81 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import type { ScoredStation } from "@/lib/types";
 import { StationCard } from "./StationCard";
-import { FilterBar } from "./FilterBar";
+import { Filters, type FilterState } from "./Filters";
 
 interface StationListProps {
-  stations: ScoredStation[];
+    stations: ScoredStation[];
 }
 
 export function StationList({ stations }: StationListProps) {
-  const [filtered, setFiltered] = useState<ScoredStation[]>(stations);
-  const [showAll, setShowAll] = useState(false);
+    const [filters, setFilters] = useState<FilterState>({
+        massif: null,
+        minAltitude: null,
+        minScore: null,
+    });
 
-  const displayed = showAll ? filtered : filtered.slice(0, 10);
+    const [showAll, setShowAll] = useState(false);
 
-  return (
-    <div>
-      {/* Filtres */}
-      <div className="mb-6">
-        <FilterBar stations={stations} onFilter={setFiltered} />
-      </div>
+    const massifs = useMemo(() => {
+        const set = new Set(stations.map((s) => s.station.massif));
+        return Array.from(set).sort();
+    }, [stations]);
 
-      {/* Compteur résultats */}
-      <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-slate-400">
-          {filtered.length} station{filtered.length > 1 ? "s" : ""}
-          {filtered.length !== stations.length && (
-            <span> (sur {stations.length})</span>
-          )}
-        </p>
-        <p className="text-xs text-slate-500">
-          Mis à jour :{" "}
-          {new Date().toLocaleDateString("fr-FR", {
-            day: "numeric",
-            month: "long",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </p>
-      </div>
+    const filtered = useMemo(() => {
+        return stations.filter((s) => {
+            if (filters.massif && s.station.massif !== filters.massif) return false;
+            if (filters.minAltitude && s.station.altitudeMax < filters.minAltitude)
+                return false;
+            if (filters.minScore && s.score.total < filters.minScore) return false;
+            return true;
+        });
+    }, [stations, filters]);
 
-      {/* Liste de stations */}
-      {filtered.length === 0 ? (
-        <div className="card-glass p-12 text-center">
-          <p className="text-lg text-slate-400">
-            Aucune station ne correspond aux filtres 🏔️
-          </p>
-          <p className="mt-2 text-sm text-slate-500">
-            Essayez d&apos;élargir vos critères.
-          </p>
+    const displayed = showAll ? filtered : filtered.slice(0, 15);
+
+    const onFilterChange = useCallback((f: FilterState) => {
+        setFilters(f);
+        setShowAll(false);
+    }, []);
+
+    return (
+        <div className="space-y-4">
+            <Filters massifs={massifs} onFilterChange={onFilterChange} />
+
+            <div className="flex items-center justify-between">
+                <p className="text-sm text-snow-300/50">
+                    {filtered.length} station{filtered.length > 1 ? "s" : ""}
+                    {filters.massif ? ` · ${filters.massif}` : ""}
+                </p>
+            </div>
+
+            <div className="space-y-3">
+                {displayed.map((scored, i) => (
+                    <StationCard key={scored.station.id} station={scored} rank={i + 1} />
+                ))}
+            </div>
+
+            {!showAll && filtered.length > 15 && (
+                <div className="flex justify-center pt-4">
+                    <button
+                        onClick={() => setShowAll(true)}
+                        className="rounded-xl px-6 py-3 text-sm font-medium bg-glacier-500/10 text-glacier-400 hover:bg-glacier-500/20 transition-all ring-1 ring-glacier-500/20"
+                    >
+                        Voir les {filtered.length - 15} stations restantes
+                    </button>
+                </div>
+            )}
+
+            {filtered.length === 0 && (
+                <div className="glass-card p-12 text-center">
+                    <p className="text-4xl mb-3">🏔️</p>
+                    <p className="text-snow-300/60">
+                        Aucune station ne correspond aux filtres sélectionnés
+                    </p>
+                </div>
+            )}
         </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
-          {displayed.map((data, index) => (
-            <StationCard
-              key={data.station.id}
-              data={data}
-              rank={index + 1}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Bouton voir plus */}
-      {!showAll && filtered.length > 10 && (
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => setShowAll(true)}
-            className="rounded-xl border border-glacier-500/30 bg-glacier-500/10 px-6 py-3 text-sm font-medium text-glacier-400 transition-all hover:bg-glacier-500/20"
-          >
-            Voir les {filtered.length - 10} autres stations
-          </button>
-        </div>
-      )}
-    </div>
-  );
+    );
 }

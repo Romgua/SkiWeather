@@ -41,8 +41,8 @@ export interface Station {
   id: string;
   name: string;
   slug: string;
-  massif: Massif;
-  region: Region;
+  massif: string;
+  region: string;
   lat: number;
   lon: number;
   altitudeVillage: number;
@@ -50,8 +50,9 @@ export interface Station {
   altitudeMax: number;
   kmPistes: number;
   openMeteoElevation: number;
-    snowForecastSlug: string | null;
-    skiinfoSlug: string | null;
+  snowForecastSlug: string | null;
+  skiinfoSlug: string | null;
+  skiinfoRegion: string | null;
 }
 
 export interface DailyForecast {
@@ -137,11 +138,26 @@ export interface SnowForecastData {
 }
 
 export interface SkiinfoData {
-    openLifts: number;
-    totalLifts: number;
-    openSlopes: number;  // km
-    totalSlopes: number; // km
+    stationId: string;
+    // Enneigement
+    snowBase: number;       // cm en bas
+    snowMid: number;        // cm moyenne montagne
+    snowTop: number;        // cm en haut
+    snowQuality: string;    // "Poudreuse", "Damée", etc.
+    // Neige fraîche (historique récent)
+    recentSnowDays: number[];  // derniers jours (le plus ancien en premier)
+    recentSnowTotal: number;   // somme
+    // Prévisions neige
+    forecastSnowDays: number[]; // prochains jours
+    forecastSnowTotal: number;
+    // Remontées & pistes
+    liftsOpen: number;
+    liftsTotal: number;
+    runsOpen: number;
+    runsTotal: number;
+    // Statut
     isOpen: boolean;
+    // Méta
     scrapedAt: string;
 }
 

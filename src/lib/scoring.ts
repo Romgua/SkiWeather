@@ -167,8 +167,8 @@ function scoreWind(daily: DailyForecast[]): number {
 // ============================================================
 function scoreOpening(d:DailyForecast[],st:Station,skiinfo?:SkiinfoData|null):number{
     // Données réelles si disponibles
-    if(skiinfo&&skiinfo.totalLifts>0){
-        return Math.round((skiinfo.openLifts/skiinfo.totalLifts)*100)
+    if(skiinfo&&skiinfo.liftsTotal>0){
+        return Math.round((skiinfo.liftsOpen/skiinfo.liftsTotal)*100)
     }
     // Fallback estimation
     const avgDepth=d.reduce((s,x)=>s+x.snowfallCm,0)/d.length;

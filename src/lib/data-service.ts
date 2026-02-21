@@ -3,7 +3,7 @@ import { fetchStationWeather } from "./weather";
 import { scoreStation } from "./scoring";
 import type { ScoredStation, SnowForecastData, SkiinfoData } from "./types";
 import { getAllSnowForecastData, getSnowForecastData } from "./scraping/snow-forecast";
-import { getAllSkiinfoData, getSkiinfoData } from "./scraping/skiinfo";
+import { scrapeAllSkiinfo, scrapeSkiinfo } from "./scraping/skiinfo";
 
 // ============================================================
 // Cache mémoire simple
@@ -26,32 +26,42 @@ export async function getScoredStations(): Promise<ScoredStation[]> {
     const startTime = Date.now();
 
     // Scraping en parallèle — silencieux si ça échoue
+    const stationIds = stations.map((s) => s.id);
+
     const [snowForecastMap, skiinfoMap] = await Promise.all([
-        getAllSnowForecastData().catch((err) => {
+        getAllSnowForecastData().catch((err: Error) => {
             console.warn("[SkiWeather] Snow-Forecast scraping failed:", err.message);
             return new Map<string, SnowForecastData>();
         }),
-        getAllSkiinfoData().catch((err) => {
+        scrapeAllSkiinfo(stationIds).catch((err: Error) => {
             console.warn("[SkiWeather] Skiinfo scraping failed:", err.message);
             return new Map<string, SkiinfoData>();
         }),
     ]);
 
-    // Fetch météo + scoring par station
+    // Fetch météo + scoring — par batch de 10 en parallèle
+    const BATCH_SIZE = 10;
     const results: ScoredStation[] = [];
 
-    for (const station of stations) {
-        try {
-            const weather = await fetchStationWeather(station);
-            if (!weather) continue;
+    for (let i = 0; i < stations.length; i += BATCH_SIZE) {
+        const batch = stations.slice(i, i + BATCH_SIZE);
 
-            const snowForecast = snowForecastMap.get(station.id) ?? null;
-            const skiinfo = skiinfoMap.get(station.id) ?? null;
+        const batchResults = await Promise.allSettled(
+            batch.map(async (station) => {
+                const weather = await fetchStationWeather(station);
+                if (!weather) return null;
 
-            const scored = scoreStation(station, weather, snowForecast, skiinfo);
-            results.push(scored);
-        } catch (err) {
-            console.warn(`[SkiWeather] Skipping ${station.name}:`, err);
+                const snowForecast = snowForecastMap.get(station.id) ?? null;
+                const skiinfo = skiinfoMap.get(station.id) ?? null;
+
+                return scoreStation(station, weather, snowForecast, skiinfo);
+            })
+        );
+
+        for (const result of batchResults) {
+            if (result.status === "fulfilled" && result.value) {
+                results.push(result.value);
+            }
         }
     }
 
@@ -92,12 +102,13 @@ export async function getScoredStationBySlug(
 
         const [snowForecast, skiinfo] = await Promise.all([
             getSnowForecastData(station.id).catch(() => null),
-            getSkiinfoData(station.id).catch(() => null),
+            scrapeSkiinfo(station.id).catch(() => null),
         ]);
 
         return scoreStation(station, weather, snowForecast, skiinfo);
-    } catch (err) {
-        console.warn(`[SkiWeather] Error fetching ${station.name}:`, err);
+    } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Unknown";
+        console.warn(`[SkiWeather] Error fetching ${station.name}: ${msg}`);
         return null;
     }
 }
