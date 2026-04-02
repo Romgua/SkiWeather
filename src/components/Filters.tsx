@@ -14,11 +14,36 @@ export interface FilterState {
 }
 
 const altitudeOptions = [
-    { label: "Toutes", value: null },
-    { label: "2000m+", value: 2000 },
-    { label: "2500m+", value: 2500 },
-    { label: "3000m+", value: 3000 },
+    { label: "Toutes altitudes", value: null },
+    { label: "2000m et plus", value: 2000 },
+    { label: "2500m et plus", value: 2500 },
+    { label: "3000m et plus", value: 3000 },
 ];
+
+function Select({
+    label,
+    value,
+    onChange,
+    children,
+}: {
+    label: string;
+    value: string;
+    onChange: (v: string) => void;
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="flex flex-col gap-1 min-w-[160px]">
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{label}</label>
+            <select
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all cursor-pointer"
+            >
+                {children}
+            </select>
+        </div>
+    );
+}
 
 export function Filters({ massifs, onFilterChange }: FiltersProps) {
     const [activeFilters, setActiveFilters] = useState<FilterState>({
@@ -28,7 +53,8 @@ export function Filters({ massifs, onFilterChange }: FiltersProps) {
     });
 
     const updateFilter = useCallback(
-        (key: keyof FilterState, value: string | number | null) => {
+        (key: keyof FilterState, raw: string) => {
+            const value = raw === "" ? null : isNaN(Number(raw)) ? raw : Number(raw);
             const newFilters = { ...activeFilters, [key]: value };
             setActiveFilters(newFilters);
             onFilterChange(newFilters);
@@ -39,75 +65,42 @@ export function Filters({ massifs, onFilterChange }: FiltersProps) {
     const hasActiveFilters = Object.values(activeFilters).some((v) => v !== null);
 
     return (
-        <div className="glass-card p-4">
-            <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xs font-semibold uppercase tracking-wider text-snow-300/50">
-          Filtres
-        </span>
-
-                <div className="flex flex-wrap gap-1.5">
-                    <button
-                        onClick={() => updateFilter("massif", null)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                            activeFilters.massif === null
-                                ? "bg-glacier-500/20 text-glacier-400 ring-1 ring-glacier-500/30"
-                                : "bg-white/5 text-snow-300/60 hover:bg-white/10"
-                        }`}
-                    >
-                        Tous
-                    </button>
+        <div className="card p-4">
+            <div className="flex flex-wrap items-end gap-4">
+                <Select
+                    label="Massif"
+                    value={activeFilters.massif ?? ""}
+                    onChange={(v) => updateFilter("massif", v)}
+                >
+                    <option value="">Tous les massifs</option>
                     {massifs.map((m) => (
-                        <button
-                            key={m}
-                            onClick={() =>
-                                updateFilter("massif", activeFilters.massif === m ? null : m)
-                            }
-                            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                                activeFilters.massif === m
-                                    ? "bg-glacier-500/20 text-glacier-400 ring-1 ring-glacier-500/30"
-                                    : "bg-white/5 text-snow-300/60 hover:bg-white/10"
-                            }`}
-                        >
-                            {m}
-                        </button>
+                        <option key={m} value={m}>{m}</option>
                     ))}
-                </div>
+                </Select>
 
-                <div className="h-4 w-px bg-white/10 hidden sm:block" />
-                <div className="flex gap-1.5">
+                <Select
+                    label="Altitude max"
+                    value={activeFilters.minAltitude?.toString() ?? ""}
+                    onChange={(v) => updateFilter("minAltitude", v)}
+                >
                     {altitudeOptions.map((opt) => (
-                        <button
-                            key={opt.label}
-                            onClick={() => updateFilter("minAltitude", opt.value)}
-                            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                                activeFilters.minAltitude === opt.value
-                                    ? "bg-glacier-500/20 text-glacier-400 ring-1 ring-glacier-500/30"
-                                    : "bg-white/5 text-snow-300/60 hover:bg-white/10"
-                            }`}
-                        >
+                        <option key={opt.label} value={opt.value?.toString() ?? ""}>
                             {opt.label}
-                        </button>
+                        </option>
                     ))}
-                </div>
+                </Select>
 
                 {hasActiveFilters && (
-                    <>
-                        <div className="h-4 w-px bg-white/10" />
-                        <button
-                            onClick={() => {
-                                const reset: FilterState = {
-                                    massif: null,
-                                    minAltitude: null,
-                                    minScore: null,
-                                };
-                                setActiveFilters(reset);
-                                onFilterChange(reset);
-                            }}
-                            className="rounded-full px-3 py-1.5 text-xs font-medium text-red-400/80 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-all"
-                        >
-                            ✕ Reset
-                        </button>
-                    </>
+                    <button
+                        onClick={() => {
+                            const reset: FilterState = { massif: null, minAltitude: null, minScore: null };
+                            setActiveFilters(reset);
+                            onFilterChange(reset);
+                        }}
+                        className="self-end rounded-xl px-4 py-2 text-sm font-medium text-red-500 bg-red-50 hover:bg-red-100 border border-red-100 transition-all"
+                    >
+                        Réinitialiser
+                    </button>
                 )}
             </div>
         </div>

@@ -120,6 +120,8 @@ export interface ScoredStation {
   score: ScoreBreakdown;
   dailyScores: DailyScore[];
   tags: StationTag[];
+  snowForecast: SnowForecastData | null;
+  skiinfo: SkiinfoData | null;
 }
 
 export interface FilterOptions {

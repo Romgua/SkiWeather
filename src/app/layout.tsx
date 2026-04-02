@@ -49,7 +49,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="fr" className={`dark ${inter.variable} ${jetbrains.variable}`}>
+        <html lang="fr" className={`${inter.variable} ${jetbrains.variable}`}>
         <body className="min-h-screen flex flex-col font-sans">
         <Header />
         <main className="flex-1">{children}</main>

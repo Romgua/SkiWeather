@@ -38,6 +38,10 @@ export const SKIINFO_MAP: Record<string, SkiinfoMapping | null> = {
     "valloire":           { skiinfoRegion: "alpes-du-nord", skiinfoSlug: "valloire" },
     "villard-de-lans":    { skiinfoRegion: "alpes-du-nord", skiinfoSlug: "villard-de-lans" },
     "col-de-porte":       { skiinfoRegion: "alpes-du-nord", skiinfoSlug: "col-de-porte" },
+    "les-menuires":       { skiinfoRegion: "alpes-du-nord", skiinfoSlug: "les-menuires" },
+    "les-sybelles":       { skiinfoRegion: "alpes-du-nord", skiinfoSlug: "les-sybelles-le-corbier" },
+    "les-karellis":       { skiinfoRegion: "alpes-du-nord", skiinfoSlug: "les-karellis" },
+    "aussois":            { skiinfoRegion: "alpes-du-nord", skiinfoSlug: "aussois" },
 
     // ──── ALPES DU SUD ────
     "serre-chevalier":    { skiinfoRegion: "alpes-du-sud", skiinfoSlug: "serre-chevalier" },
@@ -72,6 +76,7 @@ export const SKIINFO_MAP: Record<string, SkiinfoMapping | null> = {
     // ──── MASSIF CENTRAL ────
     "super-besse":        { skiinfoRegion: "massif-central", skiinfoSlug: "besse-super-besse" },
     "le-mont-dore":       { skiinfoRegion: "massif-central", skiinfoSlug: "le-mont-dore" },
+    "le-lioran":          { skiinfoRegion: "massif-central", skiinfoSlug: "le-lioran" },
 };
 
 /**

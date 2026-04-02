@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.skiinfo.fr)",
+      "Bash(node -e ':*)",
+      "Bash(node:*)"
+    ]
+  }
+}

@@ -157,6 +157,11 @@ export async function getAllSnowForecastData(): Promise<
     );
 
     for (const station of stationsWithSlug) {
+        // Pas de page snow-forecast pour cette station
+        if (!station.snowForecastSlug) {
+            continue;
+        }
+        
         // Cache check
         const cached = cache.get(station.id);
         if (cached && Date.now() - cached.ts < CACHE_TTL) {

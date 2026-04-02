@@ -371,11 +371,11 @@ export function scoreStation(
     const weatherSc=scoreWeather(daily);
     const wind=scoreWind(daily);
     const opening=scoreOpening(daily,station,skiinfo);
-    const total=Math.round(snow*0.3+snowpack*0.25+weatherSc*0.25+wind*0.1+opening*0.1);
+    const total=Math.round(snow*0.25+snowpack*0.25+weatherSc*0.30+wind*0.1+opening*0.1);
     const score:ScoreBreakdown={total:clamp(total,0,100),snow,snowpack,weather:weatherSc,wind,opening};
     const dailyScores=computeDailyScores(daily);
     const tags=computeTags(daily,score);
-    return{station,weather,score,dailyScores,tags}
+    return{station,weather,score,dailyScores,tags,snowForecast:snowForecast??null,skiinfo:skiinfo??null}
 }
 
 // ============================================================

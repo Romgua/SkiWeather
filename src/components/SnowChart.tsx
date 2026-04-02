@@ -4,9 +4,10 @@ interface SnowChartProps {
     daily: DailyForecast[];
     height?: number;
     width?: number;
+    highlightIndex?: number;
 }
 
-export function SnowChart({ daily, height = 40, width = 120 }: SnowChartProps) {
+export function SnowChart({ daily, height = 40, width = 120, highlightIndex }: SnowChartProps) {
     const snowData = daily.slice(0, 7).map((d) => d.snowfallCm);
     const maxSnow = Math.max(...snowData, 5);
 
@@ -27,6 +28,7 @@ export function SnowChart({ daily, height = 40, width = 120 }: SnowChartProps) {
                 const x = padding + i * (barWidth + 2);
                 const y = height - padding - barHeight;
                 const hasSnow = snow > 0;
+                const isHighlighted = highlightIndex === i;
 
                 return (
                     <g key={i}>
@@ -36,7 +38,7 @@ export function SnowChart({ daily, height = 40, width = 120 }: SnowChartProps) {
                             width={barWidth}
                             height={usableHeight}
                             rx={2}
-                            fill="rgba(255,255,255,0.04)"
+                            fill={isHighlighted ? "rgba(59,130,246,0.12)" : "rgba(0,0,0,0.04)"}
                         />
                         {hasSnow && (
                             <rect
@@ -45,8 +47,8 @@ export function SnowChart({ daily, height = 40, width = 120 }: SnowChartProps) {
                                 width={barWidth}
                                 height={barHeight}
                                 rx={2}
-                                fill={snow >= 10 ? "#38bdf8" : "#0ea5e9"}
-                                opacity={snow >= 10 ? 1 : 0.7}
+                                fill={isHighlighted ? "#2563eb" : snow >= 10 ? "#38bdf8" : "#0ea5e9"}
+                                opacity={snow >= 10 || isHighlighted ? 1 : 0.7}
                             />
                         )}
                     </g>

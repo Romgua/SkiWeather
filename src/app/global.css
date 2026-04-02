@@ -8,11 +8,11 @@
 
 @layer base {
     * {
-        @apply border-gray-800;
+        @apply border-slate-200;
     }
 
     body {
-        @apply bg-peak-950 text-snow-100 antialiased;
+        @apply bg-slate-50 text-slate-900 antialiased;
     }
 
     ::-webkit-scrollbar {
@@ -20,25 +20,34 @@
     }
 
     ::-webkit-scrollbar-track {
-        @apply bg-peak-900;
+        @apply bg-slate-100;
     }
 
     ::-webkit-scrollbar-thumb {
-        @apply bg-glacier-800 rounded-full;
+        @apply bg-slate-300 rounded-full;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        @apply bg-glacier-700;
+        @apply bg-slate-400;
     }
 }
 
 @layer components {
+    .card {
+        @apply bg-white border border-slate-100 rounded-2xl shadow-sm;
+    }
+
+    .card-hover {
+        @apply card transition-all duration-200 hover:shadow-md hover:border-blue-100;
+    }
+
+    /* Garde la compatibilité avec l'ancien code */
     .glass-card {
-        @apply bg-peak-900/60 backdrop-blur-md border border-white/5 rounded-2xl;
+        @apply bg-white border border-slate-100 rounded-2xl shadow-sm;
     }
 
     .glass-card-hover {
-        @apply glass-card transition-all duration-300 hover:border-glacier-500/30 hover:bg-peak-900/80 hover:shadow-lg hover:shadow-glacier-500/5;
+        @apply card-hover;
     }
 
     .score-ring {
@@ -47,11 +56,11 @@
     }
 
     .gradient-text {
-        @apply bg-gradient-to-r from-glacier-400 to-cyan-300 bg-clip-text text-transparent;
+        @apply bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent;
     }
 
     .section-title {
-        @apply text-2xl font-bold tracking-tight text-snow-50;
+        @apply text-2xl font-bold tracking-tight text-slate-900;
     }
 }
 

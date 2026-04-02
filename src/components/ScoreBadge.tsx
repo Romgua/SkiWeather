@@ -3,6 +3,7 @@ interface ScoreBadgeProps {
     size?: "sm" | "md" | "lg";
     showLabel?: boolean;
     animated?: boolean;
+    onDark?: boolean; // true = fond coloré (hero), false = fond blanc (cartes)
 }
 
 function getScoreColorHex(score: number): string {
@@ -29,58 +30,41 @@ const sizes = {
 };
 
 export function ScoreBadge({
-                               score,
-                               size = "md",
-                               showLabel = false,
-                               animated = true,
-                           }: ScoreBadgeProps) {
+    score,
+    size = "md",
+    showLabel = false,
+    animated = true,
+    onDark = false,
+}: ScoreBadgeProps) {
     const s = sizes[size];
     const circumference = 2 * Math.PI * s.radius;
     const offset = circumference - (score / 100) * circumference;
     const color = getScoreColorHex(score);
+    const trackColor = onDark ? "rgba(255,255,255,0.30)" : "rgba(0,0,0,0.08)";
+    const labelColor = onDark ? "text-white/80" : "text-slate-500";
 
     return (
         <div className="flex flex-col items-center gap-1">
             <div className={`relative ${s.box}`}>
                 <svg className="score-ring w-full h-full" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r={s.radius} fill="none" stroke={trackColor} strokeWidth={s.stroke} />
                     <circle
-                        cx="50"
-                        cy="50"
-                        r={s.radius}
-                        fill="none"
-                        stroke="rgba(255,255,255,0.06)"
-                        strokeWidth={s.stroke}
-                    />
-                    <circle
-                        cx="50"
-                        cy="50"
-                        r={s.radius}
+                        cx="50" cy="50" r={s.radius}
                         fill="none"
                         stroke={color}
                         strokeWidth={s.stroke}
                         strokeLinecap="round"
                         strokeDasharray={circumference}
                         strokeDashoffset={offset}
-                        style={
-                            animated
-                                ? ({
-                                    "--score-offset": offset,
-                                    animation: "scoreFill 1s ease-out forwards",
-                                } as React.CSSProperties)
-                                : undefined
-                        }
+                        style={animated ? ({ "--score-offset": offset, animation: "scoreFill 1s ease-out forwards" } as React.CSSProperties) : undefined}
                     />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-          <span className={`font-bold ${s.text} font-mono`} style={{ color }}>
-            {score}
-          </span>
+                    <span className={`font-bold ${s.text} font-mono`} style={{ color }}>{score}</span>
                 </div>
             </div>
             {showLabel && (
-                <span className="text-xs font-medium text-snow-300/70">
-          {getScoreLabel(score)}
-        </span>
+                <span className={`text-xs font-medium ${labelColor}`}>{getScoreLabel(score)}</span>
             )}
         </div>
     );
