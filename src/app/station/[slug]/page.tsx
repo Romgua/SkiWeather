@@ -15,13 +15,34 @@ export function generateStaticParams() {
     return stations.map((s) => ({ slug: s.slug }));
 }
 
+const BASE_URL = "https://skiweather.vercel.app";
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
     const station = stations.find((s) => s.slug === slug);
     if (!station) return {};
+
+    const title = `${station.name} — Conditions ski & météo | SkiWeather`;
+    const description = `Prévisions ski ${station.name} (${station.massif}) : enneigement, neige fraîche, météo 7 jours. ${station.altitudeMin}–${station.altitudeMax}m · ${station.kmPistes}km de pistes.`;
+    const url = `${BASE_URL}/station/${slug}`;
+
     return {
-        title: `${station.name} — Conditions ski & météo | SkiWeather`,
-        description: `Prévisions ski ${station.name} (${station.massif}) : enneigement, neige fraîche, météo 7 jours. ${station.altitudeMin}–${station.altitudeMax}m.`,
+        title,
+        description,
+        alternates: { canonical: url },
+        openGraph: {
+            title,
+            description,
+            url,
+            type: "website",
+            locale: "fr_FR",
+            siteName: "SkiWeather",
+        },
+        twitter: {
+            card: "summary",
+            title,
+            description,
+        },
     };
 }
 
