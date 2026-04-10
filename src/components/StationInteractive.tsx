@@ -36,12 +36,13 @@ function DailyBreakdown({ daily, dailyScores, overallScore }: {
 }
 
 // ─── Section prévisions ────────────────────────────────────────────────────────
-export function StationInteractive({ daily, dailyScores, overallScore }: {
+export function StationInteractive({ daily, dailyScores, overallScore, initialDay = 0 }: {
     daily: DailyForecast[];
     dailyScores: DailyScore[];
     overallScore: ScoreBreakdown;
+    initialDay?: number;
 }) {
-    const [selected, setSelected] = useState(0);
+    const [selected, setSelected] = useState(initialDay);
 
     const day = daily[selected];
     const ds = dailyScores[selected];

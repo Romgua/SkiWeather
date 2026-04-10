@@ -8,7 +8,7 @@ import { scrapeAllSkiinfo, scrapeSkiinfo } from "./scraping/skiinfo";
 // ============================================================
 // Cache mémoire simple
 // ============================================================
-const CACHE_TTL = 3 * 60 * 60 * 1000; // 3h
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
 let cachedStations: ScoredStation[] | null = null;
 let cacheTimestamp = 0;
 

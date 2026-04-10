@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { ScoredStation } from "@/lib/types";
 import { StationCard } from "./StationCard";
 import { Filters, type FilterState } from "./Filters";
@@ -13,7 +14,13 @@ interface StationListProps {
 }
 
 export function StationList({ stations }: StationListProps) {
-    const [selectedDay, setSelectedDay] = useState(0);
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const initialDay = Math.min(
+        Math.max(0, parseInt(searchParams.get("day") ?? "0", 10) || 0),
+        (stations[0]?.weather.daily.length ?? 7) - 1
+    );
+    const [selectedDay, setSelectedDay] = useState(initialDay);
     const [compareList, setCompareList] = useState<string[]>([]);
     const [filters, setFilters] = useState<FilterState>({
         massif: null,
@@ -68,7 +75,13 @@ export function StationList({ stations }: StationListProps) {
             {/* Sélecteur de date */}
             <DateSelector
                 selectedDay={selectedDay}
-                onSelectDay={(day) => { setSelectedDay(day); setShowAll(false); }}
+                onSelectDay={(day) => {
+                    setSelectedDay(day);
+                    setShowAll(false);
+                    const params = new URLSearchParams(searchParams.toString());
+                    if (day === 0) params.delete("day"); else params.set("day", String(day));
+                    router.replace(`?${params.toString()}`, { scroll: false });
+                }}
                 availableDays={availableDays}
             />
 

@@ -1,7 +1,8 @@
+import { Suspense } from "react";
 import { getScoredStations } from "@/lib/data-service";
 import { StationList } from "@/components/StationList";
 
-export const revalidate = 10800;
+export const revalidate = 86400;
 
 export default async function HomePage() {
     const stations = await getScoredStations();
@@ -62,7 +63,9 @@ export default async function HomePage() {
 
             {/* Contenu */}
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                <StationList stations={stations} />
+                <Suspense fallback={null}>
+                    <StationList stations={stations} />
+                </Suspense>
             </div>
         </div>
     );

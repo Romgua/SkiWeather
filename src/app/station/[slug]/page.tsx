@@ -9,7 +9,7 @@ import { getWeatherDescription } from "@/lib/weather-codes";
 import type { Metadata } from "next";
 import type { SkiinfoData, SnowForecastData } from "@/lib/types";
 
-export const revalidate = 10800;
+export const revalidate = 86400;
 
 export function generateStaticParams() {
     return stations.map((s) => ({ slug: s.slug }));
@@ -153,8 +153,9 @@ function RecentSnowCard({ skiinfo }: { skiinfo: SkiinfoData | null }) {
 }
 
 // ─── Page principale ───────────────────────────────────────────────────────────
-export default async function StationPage({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
+export default async function StationPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ day?: string }> }) {
+    const [{ slug }, sp] = await Promise.all([params, searchParams]);
+    const initialDay = Math.max(0, parseInt(sp.day ?? "0", 10) || 0);
     const scored = await getScoredStationBySlug(slug);
     if (!scored) notFound();
 
@@ -189,7 +190,7 @@ export default async function StationPage({ params }: { params: Promise<{ slug: 
 
                     <div className="flex flex-col sm:flex-row sm:items-start gap-6">
                         <div className="shrink-0 bg-white/20 backdrop-blur-md rounded-3xl p-4 shadow-sm">
-                            <ScoreBadge score={score.total} size="lg" showLabel onDark />
+                            <ScoreBadge score={dailyScores[initialDay]?.score ?? score.total} size="lg" showLabel onDark />
                         </div>
                         <div className="flex-1">
                             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-1">{station.name}</h1>
@@ -236,7 +237,7 @@ export default async function StationPage({ params }: { params: Promise<{ slug: 
                 </div>
 
                 {/* Prévisions interactives + score mis à jour */}
-                <StationInteractive daily={daily} dailyScores={dailyScores} overallScore={score} />
+                <StationInteractive daily={daily} dailyScores={dailyScores} overallScore={score} initialDay={initialDay} />
 
                 <div className="text-center pt-2">
                     <Link href="/" className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">

@@ -267,7 +267,7 @@ function computeTags(
         tags.push({
             id: "bon-plan",
             label: "BON PLAN",
-            emoji: "🟢",
+            emoji: "👍",
             color: "bg-green-500",
             priority: 6,
         });
@@ -289,7 +289,7 @@ function computeTags(
         tags.push({
             id: "rain-risk",
             label: "PLUIE EN BAS",
-            emoji: "⚠️",
+            emoji: "🌧️",
             color: "bg-orange-500",
             priority: 8,
         });
