@@ -1,0 +1,59 @@
+import type { DailyForecast } from "@/lib/types";
+
+interface SnowChartProps {
+    daily: DailyForecast[];
+    height?: number;
+    width?: number;
+    highlightIndex?: number;
+}
+
+export function SnowChart({ daily, height = 40, width = 120, highlightIndex }: SnowChartProps) {
+    const snowData = daily.slice(0, 7).map((d) => d.snowfallCm);
+    const maxSnow = Math.max(...snowData, 5);
+
+    const padding = 2;
+    const usableWidth = width - padding * 2;
+    const usableHeight = height - padding * 2;
+    const barWidth = usableWidth / snowData.length - 2;
+
+    return (
+        <svg
+            width={width}
+            height={height}
+            viewBox={`0 0 ${width} ${height}`}
+            className="overflow-visible"
+        >
+            {snowData.map((snow, i) => {
+                const barHeight = (snow / maxSnow) * usableHeight;
+                const x = padding + i * (barWidth + 2);
+                const y = height - padding - barHeight;
+                const hasSnow = snow > 0;
+                const isHighlighted = highlightIndex === i;
+
+                return (
+                    <g key={i}>
+                        <rect
+                            x={x}
+                            y={padding}
+                            width={barWidth}
+                            height={usableHeight}
+                            rx={2}
+                            fill={isHighlighted ? "rgba(59,130,246,0.12)" : "rgba(0,0,0,0.04)"}
+                        />
+                        {hasSnow && (
+                            <rect
+                                x={x}
+                                y={y}
+                                width={barWidth}
+                                height={barHeight}
+                                rx={2}
+                                fill={isHighlighted ? "#2563eb" : snow >= 10 ? "#38bdf8" : "#0ea5e9"}
+                                opacity={snow >= 10 || isHighlighted ? 1 : 0.7}
+                            />
+                        )}
+                    </g>
+                );
+            })}
+        </svg>
+    );
+}
