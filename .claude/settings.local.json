@@ -3,7 +3,12 @@
     "allow": [
       "WebFetch(domain:www.skiinfo.fr)",
       "Bash(node -e ':*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(rtk git *)",
+      "Bash(nvm --version)",
+      "Bash(fnm --version)",
+      "Bash(fnm list *)",
+      "PowerShell(fnm list)"
     ]
   }
 }
