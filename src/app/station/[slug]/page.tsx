@@ -15,14 +15,14 @@ export function generateStaticParams() {
     return stations.map((s) => ({ slug: s.slug }));
 }
 
-const BASE_URL = "https://skiweather.vercel.app";
+const BASE_URL = "https://ski-meteo.vercel.app";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
     const station = stations.find((s) => s.slug === slug);
     if (!station) return {};
 
-    const title = `${station.name} — Conditions ski & météo | SkiWeather`;
+    const title = `${station.name} — Conditions ski & météo | OùSkier`;
     const description = `Prévisions ski ${station.name} (${station.massif}) : enneigement, neige fraîche, météo 7 jours. ${station.altitudeMin}–${station.altitudeMax}m · ${station.kmPistes}km de pistes.`;
     const url = `${BASE_URL}/station/${slug}`;
 
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             url,
             type: "website",
             locale: "fr_FR",
-            siteName: "SkiWeather",
+            siteName: "OùSkier",
         },
         twitter: {
             card: "summary",

@@ -20,7 +20,7 @@ export function Header() {
                     </div>
                     <div className="flex flex-col">
                         <span className="text-lg font-bold leading-tight text-slate-900">
-                            SkiWeather
+                            OùSkier
                         </span>
                         <span className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
                             Où skier en France

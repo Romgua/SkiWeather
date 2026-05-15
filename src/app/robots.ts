@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = "https://skiweather.vercel.app";
+const BASE_URL = "https://ski-meteo.vercel.app";
 
 export default function robots(): MetadataRoute.Robots {
     return {

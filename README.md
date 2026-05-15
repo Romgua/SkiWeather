@@ -1,4 +1,4 @@
-# SkiWeather
+# OùSkier
 
 Application web de classement et de prévisions des stations de ski françaises. Agrège les données météo, l'enneigement et l'état des remontées mécaniques pour produire un score global (0–100) par station, mis à jour 4 fois par jour.
 

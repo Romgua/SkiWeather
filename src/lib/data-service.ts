@@ -18,11 +18,11 @@ let cacheTimestamp = 0;
 export async function getScoredStations(): Promise<ScoredStation[]> {
     // Vérifier cache
     if (cachedStations && Date.now() - cacheTimestamp < CACHE_TTL) {
-        console.log(`[SkiWeather] Cache hit — ${cachedStations.length} stations`);
+        console.log(`[OùSkier] Cache hit — ${cachedStations.length} stations`);
         return cachedStations;
     }
 
-    console.log(`[SkiWeather] Fetching ${stations.length} stations...`);
+    console.log(`[OùSkier] Fetching ${stations.length} stations...`);
     const startTime = Date.now();
 
     // Scraping en parallèle — silencieux si ça échoue
@@ -30,11 +30,11 @@ export async function getScoredStations(): Promise<ScoredStation[]> {
 
     const [snowForecastMap, skiinfoMap] = await Promise.all([
         getAllSnowForecastData().catch((err: Error) => {
-            console.warn("[SkiWeather] Snow-Forecast scraping failed:", err.message);
+            console.warn("[OùSkier] Snow-Forecast scraping failed:", err.message);
             return new Map<string, SnowForecastData>();
         }),
         scrapeAllSkiinfo(stationIds).catch((err: Error) => {
-            console.warn("[SkiWeather] Skiinfo scraping failed:", err.message);
+            console.warn("[OùSkier] Skiinfo scraping failed:", err.message);
             return new Map<string, SkiinfoData>();
         }),
     ]);
@@ -74,7 +74,7 @@ export async function getScoredStations(): Promise<ScoredStation[]> {
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(
-        `[SkiWeather] ${results.length} stations scored in ${elapsed}s. Top: ${results[0]?.station.name} (${results[0]?.score.total})`
+        `[OùSkier] ${results.length} stations scored in ${elapsed}s. Top: ${results[0]?.station.name} (${results[0]?.score.total})`
     );
 
     return results;
@@ -108,7 +108,7 @@ export async function getScoredStationBySlug(
         return scoreStation(station, weather, snowForecast, skiinfo);
     } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Unknown";
-        console.warn(`[SkiWeather] Error fetching ${station.name}: ${msg}`);
+        console.warn(`[OùSkier] Error fetching ${station.name}: ${msg}`);
         return null;
     }
 }

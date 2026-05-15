@@ -17,10 +17,11 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "SkiWeather — Où skier cette semaine ?",
+    title: "OùSkier — Trouve la meilleure station de ski",
     description:
         "Découvrez les meilleures conditions de ski en temps réel. Prévisions neige, enneigement, météo et scoring intelligent pour 50+ stations des Alpes et Pyrénées.",
     keywords: [
+        "où skier",
         "ski",
         "météo ski",
         "enneigement",
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
         "prévisions ski",
     ],
     openGraph: {
-        title: "SkiWeather — Où skier cette semaine ?",
+        title: "OùSkier — Trouve la meilleure station de ski",
         description:
             "Les meilleures conditions de ski en temps réel pour 50+ stations.",
         type: "website",

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { stations } from "@/lib/stations";
 
-const BASE_URL = "https://skiweather.vercel.app";
+const BASE_URL = "https://ski-meteo.vercel.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const stationEntries: MetadataRoute.Sitemap = stations.map((station) => ({
